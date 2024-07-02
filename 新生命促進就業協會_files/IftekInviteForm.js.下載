@@ -1,0 +1,119 @@
+function formcheck() {
+	
+	document.form1.memMobile.value=document.form1.memMobile.value.replace("+","");
+	
+    var message = document.form1.memName.value === '' ? '請輸入姓名' 	
+	
+
+	: document.form1.memMobile.value === '' ? '請輸入聯絡手機' 	
+	: document.form1.memMobile.value.length < 10 ? '您輸入的手機號小於10碼，可能是錯的喔，請重新確認' 
+	: document.form1.memMobile.value.length > 13 ? '您輸入的手機號大於13碼，可能是錯的喔，請重新確認' 
+	: !isNaN(document.form1.memMobile.value) === false  ? '手機號碼需為純數字哦' 
+	
+	: document.getElementById('aa').value === '' ? '請輸入障別'	
+	: document.getElementById('bb').value === '' ? '請輸入障別程度'
+	: !Array.from(document.getElementsByClassName('pdt')).some(ele => ele.checked)? '請填選至少一項詢問項目'    
+	: document.getElementById('cc').checked === false ? '未勾選同意政策内容'
+	
+	/*	
+	
+	: document.form1.memEmail.value === '' ? '請輸入您的E-mail' 
+		
+	: document.form1.visitDate.value === '' ? '請選擇您方便聯絡的日期?' 
+	: new Date(document.form1.visitDate.value + ' ' + document.form1.t1.value)  < new Date() ? '請輸入之後的時間哦！'
+	*/
+	
+	
+	: null;
+    return message ? alert(message) : true
+}
+$(function() {
+	$("input[name='visitDate']").attr({ min: new Date().toLocaleDateString("zh-TW", {year: 'numeric', month: '2-digit', day: '2-digit'}).replaceAll('/','-') });
+    $('#btnSubmit').click(function(e) {
+        if (formcheck()) {
+            var fixField = {
+                subject: [window.location.host + ' 與我聯絡'],
+                sourceUrl: [window.location.host],
+                comId: ['93216125'],
+                brandNum: ['541'],
+				targetUrl       : [Cookies.get('targetUrl')],
+				refererUrl      : [Cookies.get('refererUrl')]
+            };
+            var requestData = JSON.stringify(getQueryData(fixField, $('#iftekPanelFrom').serializeArray()));
+            $.ajax({
+                type: 'POST',
+                url: 'https://wms.iftek.com.tw/sys/inviteForm/feedback/json',
+                data: requestData,
+                contentType: 'application/json; charset=utf-8',
+                success: function(result) {
+                    if (result.code === 'Success') {
+                        
+						if($('#success').length > 0){
+							$('#success').fadeIn();
+							
+							if(/Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent)) {
+								document.getElementById('link').href = document.getElementById('link').href + document.form1.memMobile.value;
+									console.log('mobile::' + document.getElementById('link').href);
+							} else {
+								document.getElementById('link').href = "https://line.me/R/ti/p/@872qdken";
+								document.getElementById('final').innerHTML="請幫我們送出對話框內預設文字 <br> (註冊+您的手機號碼)" ;
+								console.log('computer::' + document.getElementById('link').href);
+							}							
+						} else { alert('表單已成功送出'); }
+                       
+
+                        $('#iftekPanelFrom').find(':text,textarea').each(function() {
+                            $(this).val('')
+                        });
+                        $('#iftekPanelFrom').find(':radio,checkbox').each(function() {
+                            $(this).attr('checked', false)
+                        });
+                        $("input[type='checkbox']").attr('checked', false);
+                      
+						
+                        $('body').append('<img height="1" width="1" style="border-style:none;" alt="" src="//www.googleadservices.com/pagead/conversion/972404863/?value=10000.00&amp;currency_code=TWD&amp;label=gqBOCNKQ2FwQ__DWzwM&amp;guid=ON&amp;script=0"/>');
+                        location.href = '###';
+                    } else if (result.code === 'Error') {
+                        alert('送出失敗');
+                    }
+                },
+                error: null
+            })
+        }
+    })
+});
+var getQueryData = function(fixField, array) {
+    $.each(array, function(i, field) {
+        if (fixField.hasOwnProperty(field.name)) {
+            fixField[field.name].push(field.value);
+        } else {
+            fixField[field.name] = [field.value];
+        }
+    });
+    return fixField
+};
+$(function() {
+    if (getHostName(document.referrer) !== getHostName(window.location.href)) {
+        Cookies.set('refererUrl', document.referrer);
+        Cookies.set('targetUrl', window.location.href);
+        $.get('https://jsonip.com/', function(result) {
+            $.ajax({
+                type: "POST",
+                url: 'https://wms.iftek.com.tw/mars/traffic/log',
+                data: JSON.stringify({
+                    refererUrl: document.referrer,
+                    targetUrl: window.location.href,
+                    ip: result.ip
+                }),
+                contentType: "application/json; charset=utf-8",
+                success: function(result) {},
+                error: null
+            });
+        });
+    }
+
+    function getHostName(url) {
+        const host = url.match(/:\/\/(.[^/]+)/);
+        return host ? host[1] : null;
+    }
+})
